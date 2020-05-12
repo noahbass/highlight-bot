@@ -1,0 +1,49 @@
+version: '3'
+
+
+services:
+  # ---
+  # Apache Zookeeper (Kafka dependency)
+  # ---
+  zookeeper:
+    image: 'bitnami/zookeeper:3.6.1'
+    restart: always
+    ports:
+      - '2181:2181'
+    volumes:
+      - ./_volumes/zookeeper_data:/bitnami
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  # ---
+  # Apache Kafka
+  # ---
+  kafka:
+    image: 'wurstmeister/kafka:2.12-2.5.0'
+    restart: always
+    ports:
+      - '9092:9092'
+    volumes:
+      - ./_volumes/kafka_data:/kafka
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 1
+      # - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+  # ---
+  # Redis
+  # ---
+  redis:
+    image: 'redis:6.0.1-alpine'
+    restart: always
+    ports:
+      - '6379:6379'
+
+
+# volumes:
+#   zookeeper_data:
+#     driver: local
+#   kafka_data:
+#     driver: local

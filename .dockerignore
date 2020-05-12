@@ -1,0 +1,6 @@
+_volumes
+__pycache__
+venv
+test-images
+test-videos
+*.png
