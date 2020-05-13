@@ -10,8 +10,8 @@ services:
     restart: always
     ports:
       - '2181:2181'
-    volumes:
-      - ./_volumes/zookeeper_data:/bitnami
+    # volumes:
+      # - ./_volumes/zookeeper_data:/bitnami
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
   # ---
@@ -23,7 +23,7 @@ services:
     ports:
       - '9092:9092'
     volumes:
-      - ./_volumes/kafka_data:/kafka
+      # - ./_volumes/kafka_data:/kafka
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1

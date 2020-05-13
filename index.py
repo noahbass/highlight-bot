@@ -2,6 +2,7 @@ import streamlink
 from PIL import Image
 import cv2
 import game_screen
+import goal_event_producer
 
 # def get_score(image_path: str):
 #     with PyTessBaseAPI() as api:
@@ -18,7 +19,7 @@ import game_screen
 # get_score('example.png')
 
 if __name__ == "__main__":
-    streams = streamlink.streams("https://twitch.tv/r9rai")
+    streams = streamlink.streams("https://twitch.tv/freneh")
     
     try:
         stream = streams["720p60"] # default
@@ -38,6 +39,10 @@ if __name__ == "__main__":
     frame_count = 0
     frame_rate = 120 # how many frames to skip over for each frame captured
 
+    # Hacky
+    # TODO: Formalize this
+    current_state = None
+
     while capture.isOpened():
         try:
             # Capture every 
@@ -54,7 +59,28 @@ if __name__ == "__main__":
                 frame_count += frame_rate
 
                 # image.show()
-                print(game_screen.process_image(image))
+                new_state = game_screen.process_image(image)
+                print('new_state:', new_state)
+
+                if current_state is None:
+                    if not not all(new_state.values()):
+                        current_state = new_state
+                else:
+                    # If any value is none in new_state, skip over
+                    if not not all(new_state.values()):
+                        # print(current_state)
+                        # No values are none, check for goal
+                        goal_event_timestamp = new_state['timestamp']
+
+                        if new_state['home_score'] > current_state['home_score']:
+                            print('Home goal detected')
+                            # Send event to kafka
+                            goal_event_producer.send_goal_event(goal_event_timestamp)
+                        elif new_state['away_score'] > current_state['away_score']:
+                            print('Away goal detected')
+                            goal_event_producer.send_goal_event(goal_event_timestamp)
+                        
+                        current_state = new_state
             else:
                 break
         except KeyboardInterrupt:

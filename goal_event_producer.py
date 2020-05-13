@@ -42,14 +42,15 @@ def setup(topic_name):
         print(f'Topic {topic_name} exists')
 
 
-if __name__ == '__main__':
+# Helper function to send off a goal event to the topic
+def send_goal_event(timestamp: int):
+    # Hacky
+    # TODO: Fix this
     # Create producer for the kafka topic do get ready to publish
     kafka_producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
                                    api_version=(2, 5, 0))
 
-    # Create a test message
-    now = int(time.time()) # unix timestamp
-    payload = dict(timestamp=now)
+    payload = dict(timestamp=timestamp)
     payload_bytes = pickle.dumps(payload)
 
     print('Sending payload:', payload)
@@ -57,3 +58,9 @@ if __name__ == '__main__':
     kafka_producer.send(KAFKA_TOPIC_GOAL_EVENTS, payload_bytes)
 
     kafka_producer.close()
+
+
+if __name__ == '__main__':
+    # Create a test message
+    now = int(time.time()) # unix timestamp
+    send_goal_event(now)
