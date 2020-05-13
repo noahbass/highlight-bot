@@ -40,9 +40,9 @@ def get_clock(clock_image):
         return None, None
 
 def get_score(score_image):
-    score = score_image.crop((150*RESIZE_FACTOR, 0, 210*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+    score = score_image.crop((155*RESIZE_FACTOR, 0, 205*RESIZE_FACTOR, 23*RESIZE_FACTOR))
     score = pre_process.invert_if_neccessary(score)
-    score.show()
+    # score.show()
 
     with PyTessBaseAPI(psm=PSM.SINGLE_LINE, oem=OEM.DEFAULT) as api:
         api.SetImage(score)
@@ -65,7 +65,7 @@ def get_score(score_image):
 def get_home_team_name(home_image):
     home = home_image.crop((86*RESIZE_FACTOR, 0, 140*RESIZE_FACTOR, 25*RESIZE_FACTOR))
     home = pre_process.invert_if_neccessary(home)
-    home.show()
+    # home.show()
 
     with PyTessBaseAPI() as api:
         api.SetImage(home)
@@ -102,7 +102,7 @@ def process_image(image) -> dict:
 
     # Pre-process: Get just the scoreboard portion of the screen
     image_scaled = pre_process.pre_process(image, (70, 38, 350, 62), RESIZE_FACTOR)
-    image_scaled.show()
+    # image_scaled.show()
     clock_text, total_seconds = get_clock(image_scaled)
     home_score, away_score = get_score(image_scaled)
     home_name = get_home_team_name(image_scaled)
