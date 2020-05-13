@@ -75,6 +75,13 @@ def get_corrected_timezone(original_timestamp: int, original_timezone: str):
     return original_timestamp + 14400
 
 
+# Create the context payload pickled
+def get_context_payload(context: list, goal_event_timestamp: int):
+    payload = dict(context=context, goal_event_timestamp=goal_event_timestamp)
+    payload_bytes = pickle_rick.dumps(payload)
+    return payload_bytes
+
+
 if __name__ == '__main__':
     print('Starting video worker consumer')
     
@@ -90,6 +97,10 @@ if __name__ == '__main__':
                                    auto_offset_reset='earliest',
                                    enable_auto_commit=True)
     kafka_consumer.subscribe(topics=tuple(KAFKA_TOPICS))
+
+    # Create producer for the kafka topic do get ready to publish
+    kafka_producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
+                                   api_version=(2, 5, 0))
 
     try:
         # Timestamps from incoming Goal Events that have not been matched yet.
@@ -124,7 +135,7 @@ if __name__ == '__main__':
                 current_head, current_tail = new_head, new_tail
 
                 # Save the new head and tail
-                print('Video Clips message:', 'head:', new_head, ' tail:', new_tail)
+                print('Video Clips message:', 'head:', new_head, ' tail:', new_tail, f'({new_head-new_tail} seconds)')
                 print('-----')
 
                 # Check the goal_events set for any matches
@@ -139,7 +150,8 @@ if __name__ == '__main__':
                         # Found a match. TODO: send to kafka highlight worker topic
                         goal_events.remove(goal_event_timestamp)
                         print(f'  Have context: goal scored at timestamp {goal_event_timestamp}')
-                        # kafka.send()
+                        payload = get_context_payload(metadata_context, goal_event_timestamp)
+                        kafka_producer.send(KAFKA_OUTGOING_TOPIC, payload)
             if message_topic == KAFKA_TOPIC_GOAL_EVENTS:
                 print('Goal Event message:')
                 # Take the match set of video clips as the context for the goal event,
@@ -167,7 +179,8 @@ if __name__ == '__main__':
                 else:
                     # TODO: send to kafka highlight worker topic
                     print(f'  Have context: goal scored at timestamp {goal_event_timestamp}')
-                    # kafka.send()
+                    payload = get_context_payload(metadata_context, goal_event_timestamp)
+                    kafka_producer.send(KAFKA_OUTGOING_TOPIC, payload)
                 
                 print('-----')
 
