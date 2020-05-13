@@ -13,17 +13,22 @@ def pre_process(image, crop_coordinates, resize_factor):
     image_scaled = image_scaled.convert('L')\
                     .resize([resize_factor * _ for _ in image_scaled.size], Image.BICUBIC)\
                     .point(lambda pixel: pixel > 90 and pixel + 100)
+    # image_scaled.show()
+    return image_scaled
 
+
+# Invert the color on an image (if neccessary).
+# The output image should be black text on a white background.
+# This helps tesseract by making everything black text on a white background
+def invert_if_neccessary(original_image):
     # Max color should be either 0 (black) or 255 (white) for the grayscale image
-    dominate_color = max_color(image_scaled.getcolors())
+    dominate_color = max_color(original_image.getcolors())
 
     if dominate_color < 127:
         # Image (likely) has black background, invert to white background with black text
-        image_scaled = ImageOps.invert(image_scaled) # This helps tesseract by making
-                                                     # everything black text on a white background
-    # image_scaled.show()
-    
-    return image_scaled
+        return ImageOps.invert(original_image)
+
+    return original_image
 
 
 def crop(image, crop_coordinates):
