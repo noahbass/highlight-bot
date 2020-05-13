@@ -10,7 +10,7 @@ from kafka import KafkaProducer
 
 KAFKA_SERVER = '127.0.0.1:9092'
 KAFKA_TOPIC = 'stream-metadata'
-CHANNEL_NAME = 'pieface23'
+CHANNEL_NAME = 'aa9skillz'
 
 
 # Take a string that is a datetime, return the corresponding unix timestamp (in seconds)
