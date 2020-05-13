@@ -18,7 +18,7 @@ import game_screen
 # get_score('example.png')
 
 if __name__ == "__main__":
-    streams = streamlink.streams("https://twitch.tv/hashtagharryy")
+    streams = streamlink.streams("https://twitch.tv/r9rai")
     
     try:
         stream = streams["720p60"] # default

@@ -9,9 +9,9 @@ import pre_process
 RESIZE_FACTOR = 4
 
 
-def get_clock(image_scaled):
-    clock = image_scaled
-    clock = clock.crop((0, 0, 65*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+def get_clock(clock_image):
+    clock = clock_image.crop((0, 0, 65*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+    clock = pre_process.invert_if_neccessary(clock)
     # clock.show()
 
     with PyTessBaseAPI() as api:
@@ -39,10 +39,10 @@ def get_clock(image_scaled):
         
         return None, None
 
-def get_score(image_scaled):
-    score = image_scaled
-    score = score.crop((150*RESIZE_FACTOR, 0, 210*RESIZE_FACTOR, 25*RESIZE_FACTOR))
-    # score.show()
+def get_score(score_image):
+    score = score_image.crop((150*RESIZE_FACTOR, 0, 210*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+    score = pre_process.invert_if_neccessary(score)
+    score.show()
 
     with PyTessBaseAPI(psm=PSM.SINGLE_LINE, oem=OEM.DEFAULT) as api:
         api.SetImage(score)
@@ -62,11 +62,10 @@ def get_score(image_scaled):
 
         return home_score, away_score
 
-def get_home_team_name(image_scaled):
-    home = image_scaled
-    # home = ImageOps.invert(home)
-    home = home.crop((86*RESIZE_FACTOR, 0, 140*RESIZE_FACTOR, 25*RESIZE_FACTOR))
-    # home.show()
+def get_home_team_name(home_image):
+    home = home_image.crop((86*RESIZE_FACTOR, 0, 140*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+    home = pre_process.invert_if_neccessary(home)
+    home.show()
 
     with PyTessBaseAPI() as api:
         api.SetImage(home)
@@ -79,10 +78,9 @@ def get_home_team_name(image_scaled):
 
         return text
 
-def get_away_team_name(image_scaled):
-    away = image_scaled
-    # away = ImageOps.invert(away)
-    away = away.crop((210*RESIZE_FACTOR, 0, 270*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+def get_away_team_name(away_image):
+    away = away_image.crop((210*RESIZE_FACTOR, 0, 270*RESIZE_FACTOR, 25*RESIZE_FACTOR))
+    away = pre_process.invert_if_neccessary(away)
     # away.show()
 
     with PyTessBaseAPI() as api:
@@ -104,7 +102,7 @@ def process_image(image) -> dict:
 
     # Pre-process: Get just the scoreboard portion of the screen
     image_scaled = pre_process.pre_process(image, (70, 38, 350, 62), RESIZE_FACTOR)
-    # image_scaled.show()
+    image_scaled.show()
     clock_text, total_seconds = get_clock(image_scaled)
     home_score, away_score = get_score(image_scaled)
     home_name = get_home_team_name(image_scaled)
