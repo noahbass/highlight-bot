@@ -10,7 +10,8 @@ services:
     restart: always
     ports:
       - '2181:2181'
-    # volumes:
+    volumes:
+      - zookeeper_data:/bitnami
       # - ./_volumes/zookeeper_data:/bitnami
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
@@ -24,12 +25,14 @@ services:
       - '9092:9092'
     volumes:
       # - ./_volumes/kafka_data:/kafka
+      - kafka_data:/kafka
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_BROKER_ID: 1
-      # - ALLOW_PLAINTEXT_LISTENER=yes
+      KAFKA_LOG_RETENTION_MS: 900000 # 15 minutes
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 60000 # 1 minute
     depends_on:
       - zookeeper
   # ---
@@ -42,8 +45,6 @@ services:
       - '6379:6379'
 
 
-# volumes:
-#   zookeeper_data:
-#     driver: local
-#   kafka_data:
-#     driver: local
+volumes:
+  zookeeper_data:
+  kafka_data:
