@@ -3,6 +3,21 @@ version: '3'
 
 services:
   # ---
+  # Stream Capture Service
+  # ---
+  stream_capture_service:
+    build:
+      context: ./
+      dockerfile: ./stream-capture-service/Dockerfile
+    restart: always
+    volumes:
+      - ./stream-capture-service:/usr/src/app
+    environment:
+      - CHANNEL_NAME=nepenthez # the stream to capture
+      - LC_ALL=C
+    depends_on:
+      - kafka
+  # ---
   # Apache Zookeeper (Kafka dependency)
   # ---
   zookeeper:
@@ -31,7 +46,7 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_BROKER_ID: 1
-      KAFKA_LOG_RETENTION_MS: 900000 # 15 minutes
+      KAFKA_LOG_RETENTION_MS: 600000 # 10 minutes
       KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 60000 # 1 minute
     depends_on:
       - zookeeper
