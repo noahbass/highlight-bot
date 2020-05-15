@@ -1,30 +1,21 @@
+import os
 import streamlink
 from PIL import Image
 import cv2
 import game_screen
 import goal_event_producer
 
-# def get_score(image_path: str):
-#     with PyTessBaseAPI() as api:
-#         api.SetImageFile('example.png')
-#         print(api.GetUTF8Text())
-#         print(api.AllWordConfidences())
+
+CHANNEL_NAME = os.getenv('CHANNEL_NAME') or 'castro_1021'
 
 
-# get_score('stop.jpg')
-# print(pytesseract.image_to_string(Image.open('stop.jpg')))
-#print(tesserocr.tesseract_version())  # print tesseract-ocr version
-#print(tesserocr.get_languages())  # prints tessdata path and list of available languages
-
-# get_score('example.png')
-
-if __name__ == "__main__":
-    streams = streamlink.streams("https://twitch.tv/freneh")
+if __name__ == '__main__':
+    streams = streamlink.streams(f'https://twitch.tv/{CHANNEL_NAME}')
     
     try:
-        stream = streams["720p60"] # default
+        stream = streams["720p"] # default
     except:
-        stream = streams["720p"] # backup
+        stream = streams["720p60"] # backup
 
     fd = stream.open()
     stream_url = fd.writer.stream.url
@@ -32,8 +23,6 @@ if __name__ == "__main__":
 
     capture = cv2.VideoCapture(stream_url)
     print('stream url:', stream_url)
-    # position = capture.get(0)
-    # print('Current position:', position)
 
     ok, frame = capture.read()
     frame_count = 0
@@ -63,11 +52,11 @@ if __name__ == "__main__":
                 print('new_state:', new_state)
 
                 if current_state is None:
-                    if not not all(new_state.values()):
+                    if None not in new_state.values():
                         current_state = new_state
                 else:
                     # If any value is none in new_state, skip over
-                    if not not all(new_state.values()):
+                    if None not in new_state.values():
                         # print(current_state)
                         # No values are none, check for goal
                         goal_event_timestamp = new_state['timestamp']
@@ -88,7 +77,3 @@ if __name__ == "__main__":
     
     cv2.destroyAllWindows()
     capture.release()
-
-    # for i, ts in enumerate(tsFiles):
-    #     vid = 'vid{}.ts'.format(i)
-    #     process = subprocess.run(['curl', ts, '-o', vid])
