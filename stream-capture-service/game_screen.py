@@ -40,7 +40,7 @@ def get_clock(clock_image):
         return None, None
 
 def get_score(score_image):
-    score = score_image.crop((155*RESIZE_FACTOR, 0, 205*RESIZE_FACTOR, 23*RESIZE_FACTOR))
+    score = score_image.crop((150*RESIZE_FACTOR, 0, 210*RESIZE_FACTOR, 23*RESIZE_FACTOR))
     score = pre_process.invert_if_neccessary(score)
     # score.show()
 
