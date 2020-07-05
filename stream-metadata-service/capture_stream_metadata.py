@@ -1,3 +1,4 @@
+import os
 import time
 import pickle
 import ciso8601
@@ -8,9 +9,10 @@ from kafka.client_async import KafkaClient
 from kafka import KafkaProducer
 
 
-KAFKA_SERVER = '127.0.0.1:9092'
-KAFKA_TOPIC = 'stream-metadata'
-CHANNEL_NAME = 'aa9skillz'
+KAFKA_SERVER = 'kafka:9092'
+KAFKA_TOPIC = 'hbot.core.stream-metadata'
+STREAM_QUALITY = 'best' # Quality for the highlight video
+CHANNEL_NAME = os.getenv('CHANNEL_NAME') or 'andy_oasis'
 
 
 # Take a string that is a datetime, return the corresponding unix timestamp (in seconds)
@@ -27,6 +29,10 @@ def process_m3u8(m3u8_text):
     lines = list(filter(lambda x: x.startswith('https') or\
                                   x.startswith('#EXT-X-PROGRAM-DATE-TIME') or\
                                   x.startswith('#EXT-X-MEDIA-SEQUENCE'), lines))
+
+    if lines is None or lines == []:
+        # Bad data
+        return None, None
 
     # grab the sequence number (the first entry in the list), then remove the sequence
     sequence = int(lines[0].split(':')[1])
@@ -47,7 +53,7 @@ def get_stream_url(channel):
     streams = streamlink.streams(f'https://twitch.tv/{channel}')
 
     try:
-        stream = streams["720p60"] # default
+        stream = streams[STREAM_QUALITY] # default
     except:
         stream = streams["720p"] # backup
 
@@ -70,6 +76,10 @@ def work(stream_url: str) -> dict:
     # Process the m3u8 data
     sequence_number, processed_stream_data = process_m3u8(m3u8_text)
     
+    if sequence_number is None or processed_stream_data is None:
+        # Handle bad data
+        return None
+
     payload['sequence'] = sequence_number
     payload['data'] = processed_stream_data
     # print(processed_stream_data)
@@ -81,6 +91,7 @@ if __name__ == '__main__':
     kafka_client = KafkaClient(bootstrap_servers=KAFKA_SERVER,
                                api_version=(2, 5, 0))
 
+    version = kafka_client.check_version()
     future = kafka_client.cluster.request_update()
     kafka_client.poll(future=future)
 
@@ -93,12 +104,12 @@ if __name__ == '__main__':
 
     if KAFKA_TOPIC not in current_topics:
         print(f'Creating topic {KAFKA_TOPIC}...')
-        kafka_admin_client = KafkaAdminClient(bootstrap_servers='127.0.0.1:9092',
-                                              api_version=(2, 5, 0))
+        kafka_admin_client = KafkaAdminClient(bootstrap_servers=KAFKA_SERVER,
+                                                api_version=(2, 5, 0))
         
         topic_list = [NewTopic(name=KAFKA_TOPIC,
-                               num_partitions=1,
-                               replication_factor=1)]
+                                num_partitions=1,
+                                replication_factor=1)]
         kafka_admin_client.create_topics(new_topics=topic_list, validate_only=False)
 
         kafka_admin_client.close()
@@ -107,25 +118,30 @@ if __name__ == '__main__':
 
     
     # Create producer for the kafka topic do get ready to publish
-    kafka_producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER,
                                    api_version=(2, 5, 0))
 
     stream_url = get_stream_url(CHANNEL_NAME)
+    print("Stream url:", stream_url)
 
     # Create a work loop to refresh the m3u8 file every 10 seconds
     try:
         while True:
             payload = work(stream_url)
+            print('Payload size:', len(payload['data']))
 
-            # Pickle, then publish async message with payload to the kafka topic
-            payload_bytes = pickle.dumps(payload)
-            # print('Payload:', payload)
-            kafka_producer.send(KAFKA_TOPIC, payload_bytes)
+            if payload is not None:
+                # Pickle, then publish async message with payload to the kafka topic
+                payload_bytes = pickle.dumps(payload)
+                # print('Payload:', payload)
+                kafka_producer.send(KAFKA_TOPIC, payload_bytes)
 
-            # Debugging information
-            print(f'Parsed m3u8 at {payload["timestamp"]}:')
-            for timestamp, video_url in payload['data']:
-                print('  ', timestamp, video_url[-12:]) # Print end of video url for debugging
+                # Debugging information
+                print(f'Parsed m3u8 at {payload["timestamp"]}:')
+                for timestamp, video_url in payload['data']:
+                    print('  ', timestamp, video_url[-12:]) # Print end of video url for debugging
+            else:
+                print('Bad payload')
 
             time.sleep(10)
     except KeyboardInterrupt:

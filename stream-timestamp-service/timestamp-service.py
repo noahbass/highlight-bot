@@ -5,9 +5,9 @@ from kafka.client_async import KafkaClient
 from kafka import KafkaConsumer, KafkaProducer
 
 
-KAFKA_SERVER = '127.0.0.1:9092'
-KAFKA_TOPIC = 'stream-metadata'
-KAFKA_OUTGOING_TOPIC = 'hbot.worker.video-clips'
+KAFKA_SERVER = 'kafka:9092'
+KAFKA_TOPIC = 'hbot.core.stream-metadata'
+KAFKA_OUTGOING_TOPIC = 'hbot.core.video-clips'
 REDIS_PREFIX = 'hbot'
 REDIS_HBOT_SEQUENCE = f'{REDIS_PREFIX}-sequence'
 REDIS_HBOT_TIMESTAMP = f'{REDIS_PREFIX}-timestamp'
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     setup(KAFKA_TOPIC)
     setup(KAFKA_OUTGOING_TOPIC)
 
-    r = redis.Redis(host='127.0.0.1', port=6379, db=0)
+    r = redis.Redis(host='redis', port=6379, db=0)
 
     kafka_consumer = KafkaConsumer(KAFKA_TOPIC,
                              bootstrap_servers=KAFKA_SERVER,
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                              enable_auto_commit=True)
 
     # Create producer for the kafka topic do get ready to publish
-    kafka_producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER,
                                    api_version=(2, 5, 0))
 
     try:

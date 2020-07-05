@@ -8,11 +8,10 @@ from kafka.client_async import KafkaClient
 from kafka import KafkaProducer
 
 
-KAFKA_SERVER = '127.0.0.1:9092'
-KAFKA_TOPIC_GOAL_EVENTS = 'hbot.worker.goal-events'
+KAFKA_SERVER = 'kafka:9092'
 
 
-def setup(topic_name):
+def setup(topic_name: str):
     # First, check if the topic already exists in kafka
     kafka_client = KafkaClient(bootstrap_servers=KAFKA_SERVER,
                                api_version=(2, 5, 0))
@@ -43,11 +42,11 @@ def setup(topic_name):
 
 
 # Helper function to send off a goal event to the topic
-def send_goal_event(timestamp: int):
+def send_goal_event(timestamp: int, topic: str):
     # Hacky
     # TODO: Fix this
     # Create producer for the kafka topic do get ready to publish
-    kafka_producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER,
                                    api_version=(2, 5, 0))
 
     payload = dict(timestamp=timestamp)
@@ -55,7 +54,7 @@ def send_goal_event(timestamp: int):
 
     print('Sending payload:', payload)
 
-    kafka_producer.send(KAFKA_TOPIC_GOAL_EVENTS, payload_bytes)
+    kafka_producer.send(topic, payload_bytes)
 
     kafka_producer.close()
 

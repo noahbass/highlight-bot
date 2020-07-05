@@ -1,7 +1,6 @@
 import datetime
 import time
 import pickle as pickle_rick
-import requests
 import pytz
 import redis
 from kafka.admin import KafkaAdminClient, NewTopic
@@ -9,11 +8,11 @@ from kafka.client_async import KafkaClient
 from kafka import KafkaConsumer, KafkaProducer
 
 
-KAFKA_SERVER = '127.0.0.1:9092'
-KAFKA_TOPIC_VIDEO_CLIPS = 'hbot.worker.video-clips'
-KAFKA_TOPIC_GOAL_EVENTS = 'hbot.worker.goal-events'
+KAFKA_SERVER = 'kafka:9092'
+KAFKA_TOPIC_VIDEO_CLIPS = 'hbot.core.video-clips'
+KAFKA_TOPIC_GOAL_EVENTS = 'hbot.core.goal-events'
 KAFKA_TOPICS = [KAFKA_TOPIC_VIDEO_CLIPS, KAFKA_TOPIC_GOAL_EVENTS]
-KAFKA_OUTGOING_TOPIC = 'hbot.worker.highlight-worker'
+KAFKA_OUTGOING_TOPIC = 'hbot.core.highlight-worker'
 
 
 def setup(topic_name):
@@ -47,6 +46,8 @@ def setup(topic_name):
 
 
 def get_goal_context(current_video_clip_metadata_context, current_head, current_tail, goal_event_timestamp):
+    print('Context:', current_video_clip_metadata_context, current_head, current_tail. goal_event_timestamp)
+
     if current_video_clip_metadata_context is None:
         # No metadata context available, so nothing to clip
         return None
@@ -89,7 +90,7 @@ if __name__ == '__main__':
         setup(topic)
     setup(KAFKA_OUTGOING_TOPIC)
 
-    r = redis.Redis(host='127.0.0.1', port=6379, db=0)
+    r = redis.Redis(host='redis', port=6379, db=0)
 
     kafka_consumer = KafkaConsumer(bootstrap_servers=KAFKA_SERVER,
                                    api_version=(2, 5, 0),
@@ -99,7 +100,7 @@ if __name__ == '__main__':
     kafka_consumer.subscribe(topics=tuple(KAFKA_TOPICS))
 
     # Create producer for the kafka topic do get ready to publish
-    kafka_producer = KafkaProducer(bootstrap_servers='127.0.0.1:9092',
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER,
                                    api_version=(2, 5, 0))
 
     try:

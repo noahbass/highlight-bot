@@ -6,7 +6,8 @@ import game_screen
 import goal_event_producer
 
 
-CHANNEL_NAME = os.getenv('CHANNEL_NAME') or 'castro_1021'
+CHANNEL_NAME = os.getenv('CHANNEL_NAME') or 'andy_oasis'
+KAFKA_TOPIC_GOAL_EVENTS = 'hbot.core.goal-events'
 
 
 if __name__ == '__main__':
@@ -27,6 +28,9 @@ if __name__ == '__main__':
     ok, frame = capture.read()
     frame_count = 0
     frame_rate = 120 # how many frames to skip over for each frame captured
+
+    # Hacky kafka setup
+    goal_event_producer.setup(KAFKA_TOPIC_GOAL_EVENTS)
 
     # Hacky
     # TODO: Formalize this
@@ -64,10 +68,10 @@ if __name__ == '__main__':
                         if new_state['home_score'] > current_state['home_score']:
                             print('Home goal detected')
                             # Send event to kafka
-                            goal_event_producer.send_goal_event(goal_event_timestamp)
+                            goal_event_producer.send_goal_event(goal_event_timestamp, KAFKA_TOPIC_GOAL_EVENTS)
                         elif new_state['away_score'] > current_state['away_score']:
                             print('Away goal detected')
-                            goal_event_producer.send_goal_event(goal_event_timestamp)
+                            goal_event_producer.send_goal_event(goal_event_timestamp, KAFKA_TOPIC_GOAL_EVENTS)
                         
                         current_state = new_state
             else:
