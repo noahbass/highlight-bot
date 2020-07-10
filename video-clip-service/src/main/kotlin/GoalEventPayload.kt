@@ -1,6 +1,6 @@
 /**
  * An incoming data class that describes a goal
  */
-data class GoalPayload(
-    val timestamp: Long
+data class GoalEventPayload(
+    val timestamp: Timestamp
 )
