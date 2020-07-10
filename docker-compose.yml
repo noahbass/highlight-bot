@@ -5,73 +5,73 @@ services:
   # ---
   # Stream Capture Service
   # ---
-  # stream_capture_service:
-  #   build:
-  #     context: ./stream-capture-service
-  #     dockerfile: ./Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./stream-capture-service:/usr/src/app
-  #   environment:
-  #     - CHANNEL_NAME=miikelmst # the stream to capture
-  #     - LC_ALL=C
-  #   depends_on:
-  #     - kafka
-  # # ---
-  # # Stream Metadata Service
-  # # ---
-  # stream_metadata_service:
-  #   build:
-  #     context: ./stream-metadata-service
-  #     dockerfile: ./Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./stream-metadata-service:/usr/src/app
-  #   environment:
-  #     - CHANNEL_NAME=miikelmst # the stream to watch metadata
-  #     - LC_ALL=C
-  #   depends_on:
-  #     - kafka
-  # # ---
-  # # Stream Timestamp Service
-  # # ---
-  # stream_timestamp_service:
-  #   build:
-  #     context: ./stream-timestamp-service
-  #     dockerfile: ./Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./stream-timestamp-service:/usr/src/app
-  #   depends_on:
-  #     - kafka
-  #     - stream_metadata_service
-  # # ---
-  # # Video Clip Service
-  # # ---
-  # video_clip_service:
-  #   build:
-  #     context: ./video-clip-service
-  #     dockerfile: ./Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./video-clip-service:/usr/src/app
-  #   depends_on:
-  #     - kafka
-  #     # - stream_timestamp_service
-  #     # - stream_capture_service
-  # # ---
-  # # Highlight Worker Service
-  # # ---
-  # highlight_worker_service:
-  #   build:
-  #     context: ./highlight-worker-service
-  #     dockerfile: ./Dockerfile
-  #   restart: always
-  #   volumes:
-  #     - ./highlight-worker-service:/usr/src/app
-  #   depends_on:
-  #     - kafka
-  #     - video_clip_service
+  stream_capture_service:
+    build:
+      context: ./stream-capture-service
+      dockerfile: ./Dockerfile
+    restart: on-failure
+    volumes:
+      - ./stream-capture-service:/usr/src/app
+    environment:
+      - CHANNEL_NAME=brucegrannec # the stream to capture
+      - LC_ALL=C
+    depends_on:
+      - kafka
+  # ---
+  # Stream Metadata Service
+  # ---
+  stream_metadata_service:
+    build:
+      context: ./stream-metadata-service
+      dockerfile: ./Dockerfile
+    restart: always
+    volumes:
+      - ./stream-metadata-service:/usr/src/app
+    environment:
+      - CHANNEL_NAME=brucegrannec # the stream to watch metadata
+      - LC_ALL=C
+    depends_on:
+      - kafka
+  # ---
+  # Stream Timestamp Service
+  # ---
+  stream_timestamp_service:
+    build:
+      context: ./stream-timestamp-service
+      dockerfile: ./Dockerfile
+    restart: always
+    volumes:
+      - ./stream-timestamp-service:/usr/src/app
+    depends_on:
+      - kafka
+      - stream_metadata_service
+  # ---
+  # Video Clip Service
+  # ---
+  video_clip_service:
+    build:
+      context: ./video-clip-service
+      dockerfile: ./Dockerfile
+    restart: always
+    volumes:
+      - ./video-clip-service:/app
+    depends_on:
+      - kafka
+      - stream_timestamp_service
+      # - stream_capture_service
+  # ---
+  # Highlight Worker Service
+  # ---
+  highlight_worker_service:
+    build:
+      context: ./highlight-worker-service
+      dockerfile: ./Dockerfile
+    restart: always
+    volumes:
+      - ./highlight-worker-service:/usr/src/app
+    depends_on:
+      - kafka
+      - video_clip_service
   # ---
   # Apache Zookeeper (Kafka dependency)
   # ---
@@ -98,8 +98,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       # KAFKA_LISTENERS: PLAINTEXT://:9092
-      # KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://127.0.0.1:9092'
-      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092
+      KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_BROKER_ID: 1
       KAFKA_LOG_RETENTION_MS: 600000 # 10 minutes
