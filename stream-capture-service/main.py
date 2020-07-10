@@ -1,4 +1,5 @@
 import os
+import time
 import streamlink
 from PIL import Image
 import cv2
@@ -35,6 +36,11 @@ if __name__ == '__main__':
     # Hacky
     # TODO: Formalize this
     current_state = None
+
+    # Debug:
+    # time.sleep(14)
+    # print('Away goal detected')
+    # goal_event_producer.send_goal_event(int(time.time()), KAFKA_TOPIC_GOAL_EVENTS)
 
     while capture.isOpened():
         try:

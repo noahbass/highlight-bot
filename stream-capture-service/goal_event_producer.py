@@ -1,4 +1,5 @@
 import time
+import json
 import pickle
 import ciso8601
 import streamlink
@@ -50,10 +51,11 @@ def send_goal_event(timestamp: int, topic: str):
                                    api_version=(2, 5, 0))
 
     payload = dict(timestamp=timestamp)
-    payload_bytes = pickle.dumps(payload)
+    
+    # JSON to bytearray
+    payload_bytes = json.dumps(payload).encode('utf-8')
 
-    print('Sending payload:', payload)
-
+    print('Sending payload:', payload, payload_bytes)
     kafka_producer.send(topic, payload_bytes)
 
     kafka_producer.close()
