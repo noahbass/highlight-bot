@@ -1,3 +1,6 @@
+.env
+
+
 _volumes
 venv
 test-images
