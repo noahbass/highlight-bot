@@ -1,4 +1,5 @@
 import pickle as pickle_rick
+import json
 import redis
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.client_async import KafkaClient
@@ -71,6 +72,9 @@ def new_work(r: redis.Redis, payload_timestamp: int, payload_sequence: int, payl
     # Pickle and save in redis cache for the next iteration
     updated_video_metadata_bytes = pickle_rick.dumps(updated_video_metadata)
     r.set(REDIS_HBOT_VIDEO_METADATA, updated_video_metadata_bytes)
+
+    # Map the video metadata to a JSON friendly format
+    updated_video_metadata = list(map(lambda metadata: dict(timestamp=metadata[0], uri=metadata[1]), updated_video_metadata))
 
     return updated_video_metadata, head, tail
 
@@ -145,8 +149,10 @@ if __name__ == '__main__':
                                                 head=head,
                                                 tail=tail)
 
-            timestamp_range_payload_data = pickle_rick.dumps(timestamp_range_payload_data)
-            kafka_producer.send(KAFKA_OUTGOING_TOPIC, timestamp_range_payload_data)
+            # JSON to bytearray
+            payload_bytes = json.dumps(timestamp_range_payload_data).encode('utf-8')
+
+            kafka_producer.send(KAFKA_OUTGOING_TOPIC, payload_bytes)
 
             # Debugging information
             print('')
