@@ -94,9 +94,7 @@ if __name__ == '__main__':
 
     kafka_consumer = KafkaConsumer(bootstrap_servers=KAFKA_SERVER,
                                    api_version=(2, 5, 0),
-                                   group_id='stream_video_timestamp_range',
-                                   auto_offset_reset='earliest',
-                                   enable_auto_commit=True)
+                                   group_id='stream_video_timestamp_range')
     kafka_consumer.subscribe(topics=tuple(KAFKA_TOPICS))
 
     # Create producer for the kafka topic do get ready to publish
