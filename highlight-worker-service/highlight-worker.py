@@ -1,11 +1,11 @@
 import datetime
 import json
 from concurrent.futures import ThreadPoolExecutor
-import pickle as pickle_rick
+import pickle
 import requests
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.client_async import KafkaClient
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 
 
 KAFKA_SERVER = 'kafka:9092'
@@ -113,31 +113,10 @@ def download_clip(clip_metadata) -> (int, bytes):
 
 # Save a highlight to disk
 def save_highlight(highlight_video_buffer: bytes, timestamp: int) -> None:
-    with open(f'./clip-{timestamp}.ts', 'wb') as handler:
+    with open(f'./clips/clip-{timestamp}.ts', 'wb') as handler:
         handler.write(highlight_video_buffer)
         handler.close()
 
-
-# Upload highlight to Streamable
-#
-# Returns the url to the uploaded streamable video
-def upload_highlight_streamable(title: str, highlight_video_buffer: bytes) -> str:
-    print('Uploading to Streamable..')
-    try:
-        response = requests.post('https://api.streamable.com/upload',
-                                files={ 'file': highlight_video_buffer },
-                                auth=(STREAMABLE_USER, STREAMABLE_PASS),
-                                data={ 'title': title })
-
-        print('Uploaded to Streamable!', response.status_code)
-        # print(json.dumps(response.json(), indent=4)) # Debug
-        response_json = response.json()
-        shortcode = response_json['shortcode']
-
-        return f'https://streamable.com/{shortcode}'
-    except:
-        print('Couldn\'t upload to Streamable :(')
-        return None
 
 
 # Correct the timezone for a timestamp.
@@ -155,6 +134,10 @@ def get_corrected_timezone(original_timestamp: int, original_timezone: str):
 if __name__ == '__main__':
     print('Starting video worker consumer')
     setup(KAFKA_HIGHLIGHT_WORKER)
+    setup(KAFKA_OUTGOING_TOPIC)
+
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER,
+                                   api_version=(2, 5, 0))
 
     kafka_consumer = KafkaConsumer(KAFKA_HIGHLIGHT_WORKER,
                                    bootstrap_servers=KAFKA_SERVER,
@@ -181,19 +164,21 @@ if __name__ == '__main__':
 
             # Convert timestamp to a human readable format
             timestamp = goal_event_timestamp#- 14400 # Hacky fix for Twitch's timestamps
-            readable_timestamp = str(datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S'))
 
-            # Build the highlight!
-            highlight_title = f'Goal ({readable_timestamp})'
+            # Build the highlight
             highlight_video_buffer = build_highlight(clip_context_metadata, goal_event_timestamp)
             save_highlight(highlight_video_buffer, timestamp)
-            print('Highlight saved!')
-            # streamable_url = upload_highlight_streamable(highlight_title, highlight_video_buffer)
             
+            print('Highlight saved!')
+
             del highlight_video_buffer
 
-            # print('Streamable link:', streamable_url)
+            # Send message to Hooks
+            payload = dict(timestamp=timestamp)
+            payload_bytes = pickle.dumps(payload) # TODO: replace with protobuf
+            kafka_producer.send(KAFKA_OUTGOING_TOPIC, payload_bytes)
 
     except KeyboardInterrupt:
         kafka_consumer.close()
+        kafka_producer.close()
         print('interrupted')
