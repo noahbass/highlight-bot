@@ -155,10 +155,10 @@ if __name__ == '__main__':
             kafka_producer.send(KAFKA_OUTGOING_TOPIC, payload_bytes)
 
             # Debugging information
-            print('')
-            print(f'Head: {head}, Tail: {tail}')
-            for timestamp, video_url in updated_video_metadata:
-                print('  ', timestamp, video_url[-12:]) # Print end of video url for debugging
+            # print('')
+            # print(f'Head: {head}, Tail: {tail}')
+            # for timestamp, video_url in updated_video_metadata:
+            #     print('  ', timestamp, video_url[-12:]) # Print end of video url for debugging
     except KeyboardInterrupt:
         kafka_consumer.close()
         kafka_producer.close()

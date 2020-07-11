@@ -12,7 +12,7 @@ from kafka import KafkaProducer
 KAFKA_SERVER = 'kafka:9092'
 KAFKA_TOPIC = 'hbot.core.stream-metadata'
 STREAM_QUALITY = 'best' # Quality for the highlight video
-CHANNEL_NAME = os.getenv('CHANNEL_NAME') or 'andy_oasis'
+CHANNEL_NAME = os.getenv('CHANNEL_NAME')
 
 
 # Take a string that is a datetime, return the corresponding unix timestamp (in seconds)
