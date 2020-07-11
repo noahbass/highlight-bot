@@ -72,6 +72,11 @@ Hooks recieve messages in a fanout/broadcast from the highlight worker. To parti
 
 highlight bot requires [Docker](https://www.docker.com/products/docker-desktop).
 
+```sh
+$ git clone git@github.com:noahbass/highlight-bot.git
+$ cd highlight-bot
+```
+
 ## Usage
 
 To detecting goals and generating highlight clips:
