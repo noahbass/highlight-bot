@@ -11,7 +11,7 @@ CHANNEL_NAME = os.getenv('CHANNEL_NAME')
 KAFKA_TOPIC_GOAL_EVENTS = 'hbot.core.goal-events'
 
 
-def frame_handler(frame, current_state):
+def frame_handler(frame, frame_count, current_state):
     cv2_im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     image = Image.fromarray(cv2_im)
     frame_count += frame_rate
@@ -23,7 +23,7 @@ def frame_handler(frame, current_state):
     if current_state is None:
         if None not in new_state.values():
             # current_state = new_state
-            return new_state
+            return new_state, frame_count
 
     # If any value is none in new_state, skip over
     if None not in new_state.values():
@@ -39,9 +39,9 @@ def frame_handler(frame, current_state):
             goal_event_producer.send_goal_event(goal_event_timestamp, KAFKA_TOPIC_GOAL_EVENTS)
         
         # current_state = new_state
-        return new_state
+        return new_state, frame_count
     
-    return current_state
+    return current_state, frame_count
 
 
 if __name__ == '__main__':
@@ -86,7 +86,7 @@ if __name__ == '__main__':
             print('Current position:', position)
 
             if ok == True:
-                current_state = frame_handler(frame, current_state)
+                current_state, frame_count = frame_handler(frame, frame_count, current_state)
             else:
                 break
         except KeyboardInterrupt:
