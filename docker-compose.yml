@@ -13,7 +13,7 @@ services:
     volumes:
       - ./stream-capture-service:/usr/src/app
     environment:
-      - CHANNEL_NAME=brucegrannec # the stream to capture
+      - CHANNEL_NAME=${CHANNEL_NAME} # the stream to capture
       - LC_ALL=C
     depends_on:
       - kafka
@@ -28,7 +28,7 @@ services:
     volumes:
       - ./stream-metadata-service:/usr/src/app
     environment:
-      - CHANNEL_NAME=brucegrannec # the stream to watch metadata
+      - CHANNEL_NAME=${CHANNEL_NAME} # the stream to watch metadata
       - LC_ALL=C
     depends_on:
       - kafka
@@ -72,6 +72,22 @@ services:
     depends_on:
       - kafka
       - video_clip_service
+  # ---
+  # Streamable API Hook
+  # ---
+  streamable_api_hook:
+    build:
+      context: ./streamable-api-hook
+      dockerfile: ./Dockerfile
+    restart: always
+    volumes:
+      - ./highlight-worker-service/clips:/usr/src/app/clips
+      - ./streamable-api-hook:/usr/src/app
+    environment:
+      - STREAMABLE_USER=${STREAMABLE_USER}
+      - STREAMABLE_PASS=${STREAMABLE_PASS}
+    depends_on:
+      - kafka
   # ---
   # Apache Zookeeper (Kafka dependency)
   # ---
