@@ -7,6 +7,7 @@
 **Contents**
 
 - [Demo](#demo)
+  - [Jupyter Notebook](#jupyter-notebook)
 - [Architecture](#architecture)
     - [The Microservices: Explained](#the-microservices-explained)
     - [The Hooks: Explained](#the-hooks-explained)
@@ -18,9 +19,17 @@
 
 ## Demo
 
-highlight bot works by watching a live Twitch stream of FIFA gamelay (the popular FUT game mode only). When it detects a goal, the ~20 seconds before the goal are clipped as a highlight clip. The highlight clip is saved to disk and a message is broadcast to various Hooks that take the video and complete some action (example: upload to a video hosting site, post the link in a groupchat, etc.). Highlight bot is extensible, so other hooks can be easily added by monitoring a kafka topic. All of this is stateless and everything happens in memory, no writes to disk (other than [Apache Kafka](https://kafka.apache.org/documentation/#introduction)'s internals and writing the final highlight clip).
+highlight bot works by programatically monitoring frames of a live Twitch stream (with the Twitch API) of FIFA gamelay (the popular FUT game mode only). When it detects a goal, the ~20 seconds with the build up to the goal are clipped as a highlight clip. The highlight clip is saved to disk and a message is broadcast to various Hooks that take the video and complete some action (example: upload to a video hosting site, post the link in a groupchat, etc.). Highlight bot is extensible, so other hooks can be easily added by monitoring a kafka topic. All of this is stateless and everything happens in memory, no writes to disk (other than [Apache Kafka](https://kafka.apache.org/documentation/#introduction)'s internals and writing the final highlight clip).
 
-[Demo video - TODO]
+<p align="center">
+  <a href="https://assets.noahbass.com/highlight-bot-demo.mp4" target="_blank">
+    <img src="https://s3.us-east-2.amazonaws.com/assets.noahbass.com/thumbnail.jpg" />
+  </a>
+</p>
+
+### Jupyter Notebook
+
+[Jupyter Notebook](https://colab.research.google.com/drive/1HMqXU__RH-Q7XgvqvEOlkHwx7U-I4M23?usp=sharing): A notebook showing a rudimentery example of the image processing and OCR required for analyzing a frame of gameplay.
 
 ## Architecture
 
@@ -40,13 +49,14 @@ As mentioned before, highlight bot is extensible, so more hooks (a type of servi
 
 highlight bot's 5 core microservices are simple, independent services that perform just one task. Each service is either a producer, consumer, or both producer and consumer. Producers push data to a Kafka topic (stream). Consumers subscribe to a Kafka topic (or many Kafka topics) and data. Each microservice is Dockerized and runs with docker-compose.
 
-- stream-capture-service (Python): Monitors the Twitch stream for events. It uses the [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) and [tesserocr module](https://github.com/sirfz/tesserocr) to determine the score, time, and other game state information.
+- stream-capture-service (Python): Monitors frames from the Twitch stream for events. It uses the [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) and [tesserocr module](https://github.com/sirfz/tesserocr) to determine the score, time, and other game state information from the frames. Gameplay from Twitch is streamed in by the [streamlink module](https://streamlink.github.io/).
 - stream-metadata-service (Python): Collects stream metadata from the Twitch stream. The actual video from the stream isn't downloaded until the data reaches the highlight worker, therefore limiting the work the system needs to do to only essential tasks.
 - stream-timestamp-service (Python): Processes, cleans, and trims Twitch m3u8 stream data (gets it ready for the Video clip service).
 - video-clip-service (Kotlin): Enriches Twitch stream data with stream events (such as a goal event). When an event happens and stream data is available, the video clip service sends the metadata to the highlight worker. This service was written in Kotlin because I though it would be fun to use Kotlin (it was).
 - highlight-worker (Python): The highlight worker downloads the video data needed for the highlight clip, saves the clip to a local volume, then sends a fanout message to any hooks that may be listening.
 
 Other services:
+
 - video-clip-service-old (Python): A version of the video clip service written in Python. It is functionally equivalent to the service written in Kotlin, but is no longer used.
 
 ### The Hooks: Explained
