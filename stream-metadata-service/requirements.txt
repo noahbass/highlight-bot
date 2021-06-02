@@ -9,4 +9,4 @@ kafka-python==2.0.1
 requests==2.23.0
 six==1.14.0
 streamlink==1.4.1
-urllib3==1.25.9
+urllib3==1.26.5
