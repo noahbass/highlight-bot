@@ -9,7 +9,7 @@ isodate==0.6.0
 kafka-python==2.0.1
 numpy==1.18.4
 opencv-python
-Pillow==7.1.2
+Pillow==9.0.0
 pycryptodome==3.9.7
 PySocks==1.7.1
 six==1.14.0
